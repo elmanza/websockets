@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="./socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>Tutorial Socket.IO</h1>
+    <input type="text" id="inputtext" placeholder="Ingrese aquí su texto">
+    <button id="sendSocket">Enviar</button>
+    <p id="contenedor_texto" style="background-color: #e2e2e2; padding: 20px 30px; width: 100%; max-width: 500px; color: black;"></p>
+    <script>
+        let socket = io();
+        let input = document.getElementById("inputtext");
+        let parrafo = document.getElementById("contenedor_texto");
+        let button = document.getElementById("sendSocket");
+        socket.on("listenserver", data =>{
+            console.log("Recibiendo..", data);
+            let inner = ``;
+            data.forEach(element => {
+                inner += `<b>${element.id}:</b> ${element.mensaje} </br>`;
+            });
+            parrafo.innerHTML = inner;
+            // console.log("Info enviada desde neustro servidor [fillP]", data);
+        });
+        socket.on("init", data =>{
+            let inner = ``;
+            console.log("Recibiendo..", data);
+            data.forEach(element => {
+                inner += `<b>${element.id}:</b> ${element.mensaje} </br>`;
+            });
+            parrafo.innerHTML = inner;
+        });
+        button.addEventListener("click", e =>{
+            socket.emit("fillP", input.value);
+            input.value = "";
+        })
+    </script>
+</body>
+</html>
