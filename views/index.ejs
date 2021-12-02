@@ -6,36 +6,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
     <script src="./socket.io/socket.io.js"></script>
+    <style>
+        #container_chat.active>div:last-of-type, #container_chat>div:first-of-type {
+            display: block;
+        }
+        #container_chat.active>div:first-of-type, #container_chat>div:last-of-type {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Tutorial Socket.IO</h1>
-    <input type="text" id="inputtext" placeholder="Ingrese aquí su texto">
-    <button id="sendSocket">Enviar</button>
-    <p id="contenedor_texto" style="background-color: #e2e2e2; padding: 20px 30px; width: 100%; max-width: 500px; color: black;"></p>
+    <h1>Chat comision 22460 - Socket.IO</h1>
+    <div id="container_chat">
+        <div>
+            <form id="data_user">
+                <div>
+                    <input id="name_user" type="text" placeholder="Ingresa tu nombre">
+                    <input id="email_user" type="text" placeholder="Ingresa tu correo">
+                    <input style="background-color: #4CAF50; /* Green */
+                        border: none;
+                        color: white;
+                        padding: 15px 32px;
+                        text-align: center;
+                        text-decoration: none;
+                        display: inline-block;
+                        font-size: 16px;
+                        cursor: pointer;
+                    " type="submit" value="Ingresar al chat">
+                </div>
+            </form>
+        </div>
+        <div>
+            <div style="display: flex;
+            justify-content: space-between;
+            max-width: 800px;
+            margin: 50px auto 0px;">
+                <div style="width: calc(100% - 300px);
+                padding: 0px 20px 0px 0px;">
+                    <input type="text" id="inputtext" placeholder="Ingrese aquí su texto">
+                    <button id="sendSocket">Enviar</button>
+                    <p id="contenedor_texto" style="background-color: #e2e2e2; padding: 20px 30px; color: black;"></p>
+                </div>
+                <div class="users" style="    box-shadow: 0 14px 28px rgb(0 0 0 / 25%), 0 10px 10px rgb(0 0 0 / 22%);
+                width: 300px;">
+                    <div class="header_users" style="padding: 20px;">
+                        <h3>Todos los usuarios</h3>
+                        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+                    </div>
+                    <div class="body_users">
+                        <ul id="user_list">
+                            <li>
+                                <span></span>
+                                <h6>Andrés Manzano</h6>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        let socket = io();
+        let student = null;
+        let socket = null;
+
         let input = document.getElementById("inputtext");
         let parrafo = document.getElementById("contenedor_texto");
         let button = document.getElementById("sendSocket");
-        socket.on("listenserver", data =>{
-            console.log("Recibiendo..", data);
-            let inner = ``;
-            data.forEach(element => {
-                inner += `<b>${element.id}:</b> ${element.mensaje} </br>`;
-            });
-            parrafo.innerHTML = inner;
-            // console.log("Info enviada desde neustro servidor [fillP]", data);
+        let form_data_user = document.getElementById("data_user");
+        let container_chat = document.getElementById("container_chat");
+        let user_list = document.getElementById("user_list");
+        form_data_user.addEventListener("submit", e=>{
+            e.preventDefault();
+            student = {
+                name: e.target[0].value,
+                email: e.target[1].value
+            }
+            if(student.name == "" || student.email == ""){
+                window.location.reload();
+            }
+            socket = io();
+            socket.emit("addUser", student);
+            container_chat.classList = "active";
+            readSockets();
         });
-        socket.on("init", data =>{
-            let inner = ``;
-            console.log("Recibiendo..", data);
-            data.forEach(element => {
-                inner += `<b>${element.id}:</b> ${element.mensaje} </br>`;
+
+      
+
+        function readSockets(){
+            loadChat();
+
+            socket.on("listenserver", data =>{
+                console.log("Recibiendo..", data);
+                let inner = ``;
+                data.forEach(element => {
+                    inner += `<b>${element.name}:</b> ${element.mensaje} </br>`;
+                });
+                parrafo.innerHTML = inner;
+                // console.log("Info enviada desde neustro servidor [fillP]", data);
             });
-            parrafo.innerHTML = inner;
-        });
+
+            
+        }
+
+        function loadChat(){
+            socket.on("init", data =>{
+                let inner = ``;
+                console.log("Recibiendo..", data);
+                data.forEach(element => {
+                    inner += `<b>${element.name}:</b> ${element.mensaje} </br>`;
+                });
+                parrafo.innerHTML = inner;
+            });
+
+            socket.on("loadUsers", data =>{
+                console.log("Nuevo usuario", data);
+                let inner = ``;
+                data.forEach(element => {
+                    let status = element.active ? "(conectado)" : "(desconectado)";
+                    inner += `<li><b>${element.name}:</b> ${status}</li>`;
+                });
+                user_list.innerHTML = inner;
+            });
+        }
+        
+        
+        
+        
         button.addEventListener("click", e =>{
-            socket.emit("fillP", input.value);
+            let sendMessagge = {
+                ...student,
+                mensaje: input.value
+            }
+            socket.emit("mensaje", sendMessagge);
             input.value = "";
         })
     </script>

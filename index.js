@@ -2,8 +2,8 @@ const express = require("express");
 let app = express();
 let path = require("path");
 let {Server: HttpServer} = require("http");
-let {Server: SocketIO} = require("socket.io");
-const { Module } = require("module");
+let Socket = require("./utils/sockets");
+const { profile } = require("console");
 const PORT = 3000;
 
 // Settings 
@@ -21,24 +21,11 @@ app.get("/", (req, res, next)=>{
 let mensajes = [];
 
 
-
 let httpServer = new HttpServer(app);
-let socketIOServer = new SocketIO(httpServer);
+let socket = new Socket(httpServer);
+socket.init();
 
-let backuoInfo = "";
 
-socketIOServer.on('connection', socket =>{
-    socket.on("fillP", data =>{
-        let res = {
-            id : socket.id,
-            mensaje: data
-        }
-        mensajes.push(res);
-        socketIOServer.sockets.emit('listenserver', mensajes);
-    });
-    socket.emit("init", mensajes);
-    console.log(`Nuevo usuario conectado ${socket.id}`);
-})
 
 httpServer.listen(PORT, ()=>{
     console.log("Server on!");
